@@ -1,4 +1,4 @@
-# Introducción
+# Descripción del Caso
 
 El presente trabajo se enmarca en el rubro de venta de componentes de computadora, un sector comercial dedicado a la comercialización de:
 
