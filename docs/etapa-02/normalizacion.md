@@ -7,6 +7,7 @@ Ejemplo en el DER: Se observa en la entidad Usuario el atributo compuesto
 guarda como un bloque de texto único, sino que se descompone en sus atributos
 atómicos: calle, altura y codigo_postal. De esta manera, cada columna de la tabla
 contendrá un único valor indivisible.
+
 Segunda Forma Normal (2FN)
 Regla: Una tabla está en 2FN si ya se encuentra en 1FN y todos los atributos que
 no forman parte de la clave principal dependen funcionalmente por completo de dicha
@@ -20,6 +21,7 @@ ventas). El DER asigna una clave subrogada id_venta_detalle, lo cual garantiza
 estructuralmente la 2FN, pero conceptualmente respeta que los datos del detalle
 dependan de la transacción completa.
 Tercera Forma Normal (3FN)
+
 Regla: Una tabla está en 3FN si está en 2FN y no existen dependencias
 transitivas. Es decir, ningún atributo no clave debe depender de otro atributo no clave;
 todos deben depender únicamente de la clave primaria.
