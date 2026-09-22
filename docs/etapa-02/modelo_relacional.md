@@ -7,7 +7,7 @@
   + Clave Primaria (PK): id_ciudad
   + Clave Foránea (FK): id_provincia referencias PROVINCIA (id_provincia)
 
-- USUARIO (dni, apellido, email, calle, altura, codigo_postal, nro_telefono, nomb_cliente, estado, id_ciudad)
+- USUARIO (dni, apellido, nomb_usuario, email, contraseña, calle, altura, codigo_postal, nro_telefono, estado, id_ciudad)
   + Clave Primaria (PK): dni
   + Clave Única (UQ): email
   + Clave Foránea (FK): id_ciudad referencias CIUDAD (id_ciudad)
