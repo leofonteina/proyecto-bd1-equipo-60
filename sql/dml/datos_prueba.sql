@@ -28,6 +28,19 @@ VALUES
 ('Urquiza', 404, 1, 7), ('Junín', 505, 1, 8), 
 ('Av. Mitre', 606, 1, 9), ('Illia', 707, 1, 10);
 
+INSERT INTO USUARIO (dni, apellido, nombre, email, nro_telefono, estado, id_rol, id_direccion)
+VALUES 
+(11111111, 'Gomez', 'Martin', 'admin@tech.com', '3794111111', 1, 1, 1), 
+(22222222, 'Perez', 'Laura', 'laura@mail.com', '3794222222', 1, 2, 2), 
+(33333333, 'Lopez', 'Carlos', 'carlos@mail.com', '3794333333', 1, 2, 3),
+(44444444, 'Diaz', 'Ana', 'ana@mail.com', '3794444444', 1, 2, 4),
+(55555555, 'Ruiz', 'Jorge', 'jorge@mail.com', '3794555555', 1, 2, 5),
+(66666666, 'Sosa', 'Maria', 'maria@mail.com', '3794666666', 1, 2, 6),
+(77777777, 'Silva', 'Diego', 'diego@mail.com', '3794777777', 1, 2, 7),
+(88888888, 'Luna', 'Sofia', 'sofia@mail.com', '3794888888', 1, 2, 8),
+(99999999, 'Vega', 'Pablo', 'pablo@mail.com', '3794999999', 1, 2, 9),
+(10101010, 'Cruz', 'Lucia', 'lucia@mail.com', '3794000000', 1, 2, 10);
+
 INSERT INTO MARCA (descripcion, estado)
 VALUES 
 ('AMD', 1), ('Intel', 1), ('ASUS', 1), ('MSI', 1), ('Gigabyte', 1), 
