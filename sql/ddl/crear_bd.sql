@@ -71,7 +71,7 @@ CREATE TABLE PRODUCTO
 (
   id_producto INT IDENTITY NOT NULL,
   nombre VARCHAR(50) NOT NULL,
-  precio FLOAT NOT NULL,
+  precio DECIMAL(10,2) NOT NULL,
   stock INT NOT NULL,
   descripcion VARCHAR(50) NOT NULL,
   estado INT NOT NULL,
@@ -98,9 +98,9 @@ CREATE TABLE VENTA
   id_venta INT IDENTITY NOT NULL,
   estado VARCHAR(50) NOT NULL,
   domicilio_entrega VARCHAR(150) NOT NULL,
-  total INT NOT NULL,
+  total DECIMAL(10,2) NOT NULL,
   fecha_venta DATE NOT NULL,
-  dni INT NOT NULL,
+  id_usuario INT NOT NULL,
   CONSTRAINT PK_id_venta PRIMARY KEY (id_venta),
   CONSTRAINT FK_VENTA_id_usuario FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario) ON DELETE NO ACTION ON UPDATE CASCADE
 );
@@ -109,8 +109,8 @@ CREATE TABLE VENTA_DETALLE
 (
   id_venta_detalle INT IDENTITY NOT NULL,
   cantidad INT NOT NULL,
-  precio_unitario FLOAT NOT NULL,
-  subtotal FLOAT NOT NULL,
+  precio_unitario DECIMAL(10,2) NOT NULL,
+  subtotal DECIMAL(10,2) NOT NULL,
   id_producto INT NOT NULL,
   id_venta INT NOT NULL,
   CONSTRAINT PK_id_venta_detalle PRIMARY KEY (id_venta_detalle),
@@ -127,7 +127,7 @@ CREATE TABLE METODO_PAGO
 
 CREATE TABLE VENTA_PAGO
 (
-  monto FLOAT NOT NULL,
+  monto DECIMAL(10,2) NOT NULL,
   id_venta INT NOT NULL,
   id_metodo_pago INT NOT NULL,
   CONSTRAINT PK_id_venta_id_metodo_pago PRIMARY KEY (id_venta, id_metodo_pago),
