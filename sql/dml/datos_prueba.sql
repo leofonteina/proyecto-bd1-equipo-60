@@ -51,3 +51,17 @@ VALUES
 ('Procesadores', 1), ('Placas de Video', 1), ('Motherboards', 1), ('Memoria RAM', 1), 
 ('Almacenamiento SSD', 1), ('Fuentes de Poder', 1), ('Gabinetes', 1), 
 ('Mouse', 1), ('Teclados', 1), ('Monitores', 1);
+
+
+INSERT INTO PRODUCTO (nombre, precio, stock, descripción, estado, id_marca, id_categoria, dni)
+VALUES 
+('Ryzen 5 5600', 220000.0, 15, 'Procesador 6 núcleos', 1, 1, 1, 11111111),       
+('Core i5 12400F', 230000.0, 10, 'Procesador 6 núcleos', 1, 2, 1, 11111111),     
+('RTX 3060 12GB', 450000.0, 5, 'Placa de video Nvidia', 1, 3, 2, 11111111),     
+('B550 Tomahawk', 180000.0, 8, 'Motherboard AM4', 1, 4, 3, 11111111),           
+('Vengeance 16GB', 65000.0, 20, 'RAM DDR4 3200MHz', 1, 6, 4, 11111111),         
+('SSD 1TB NVMe', 90000.0, 25, 'Disco Solido M.2', 1, 7, 5, 11111111),           
+('Fuente 650W 80+', 110000.0, 12, 'Fuente Certificada', 1, 5, 6, 11111111),      
+('Mouse G203', 35000.0, 30, 'Mouse Gamer RGB', 1, 8, 8, 11111111),               
+('Teclado Kumara', 45000.0, 18, 'Teclado Mecánico', 1, 10, 9, 11111111),        
+('Monitor 24 144Hz', 280000.0, 7, 'Monitor Gamer IPS', 1, 9, 10, 11111111);      
