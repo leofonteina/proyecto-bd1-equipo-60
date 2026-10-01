@@ -64,4 +64,13 @@ VALUES
 ('Fuente 650W 80+', 110000.0, 12, 'Fuente Certificada', 1, 5, 6, 11111111),      
 ('Mouse G203', 35000.0, 30, 'Mouse Gamer RGB', 1, 8, 8, 11111111),               
 ('Teclado Kumara', 45000.0, 18, 'Teclado Mecánico', 1, 10, 9, 11111111),        
-('Monitor 24 144Hz', 280000.0, 7, 'Monitor Gamer IPS', 1, 9, 10, 11111111);      
+('Monitor 24 144Hz', 280000.0, 7, 'Monitor Gamer IPS', 1, 9, 10, 11111111);
+
+
+INSERT INTO IMAGEN (ruta_archivo, id_producto)
+VALUES 
+('/images/ryzen5.jpg', 1), ('/images/corei5.jpg', 2), ('/images/rtx3060.jpg', 3),
+('/images/b550.jpg', 4), ('/images/ram16.jpg', 5), ('/images/ssd1tb.jpg', 6),
+('/images/fuente650.jpg', 7), ('/images/g203.jpg', 8), ('/images/kumara.jpg', 9),
+('/images/monitor24.jpg', 10);
+
