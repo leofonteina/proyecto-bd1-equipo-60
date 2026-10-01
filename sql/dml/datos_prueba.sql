@@ -79,3 +79,30 @@ VALUES
 ('Efectivo'), ('Tarjeta de Débito'), 
 ('Tarjeta de Crédito'), 
 ('Mercado Pago'), ('MODO'), ('Cheque');
+
+
+INSERT INTO VENTA (estado, domicilio_entrega, total, fecha_venta, dni)
+VALUES 
+('Entregado', 'Belgrano 456, Córdoba', 220000, '2026-09-01', 22222222),
+('Enviado', 'Sarmiento 789, Rosario', 450000, '2026-09-02', 33333333),
+('Pendiente', 'Av. Las Heras 101, Mendoza', 65000, '2026-09-03', 44444444),
+('Entregado', '25 de Mayo 202, Tucuman', 90000, '2026-09-04', 55555555),
+('Cancelado', 'Güemes 303, Salta', 35000, '2026-09-05', 66666666),
+('Enviado', 'Urquiza 404, Paraná', 280000, '2026-09-06', 77777777),
+('Entregado', 'Junín 505, Corrientes', 180000, '2026-09-07', 88888888),
+('Pendiente', 'Av. Mitre 606, Posadas', 45000, '2026-09-08', 99999999),
+('Entregado', 'Illia 707, Resistencia', 110000, '2026-09-09', 10101010),
+('Enviado', 'Belgrano 456, Córdoba', 230000, '2026-09-10', 22222222);
+
+INSERT INTO VENTA_DETALLE (cantidad, precio_unitario, subtotal, id_producto, id_venta)
+VALUES 
+(1, 220000.0, 220000.0, 1, 1),  
+(1, 450000.0, 450000.0, 3, 2), 
+(1, 65000.0, 65000.0, 5, 3),    
+(1, 90000.0, 90000.0, 6, 4),   
+(1, 35000.0, 35000.0, 8, 5),    
+(1, 280000.0, 280000.0, 10, 6), 
+(1, 180000.0, 180000.0, 4, 7),  
+(1, 45000.0, 45000.0, 9, 8),    
+(1, 110000.0, 110000.0, 7, 9),  
+(1, 230000.0, 230000.0, 2, 10); 
