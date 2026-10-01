@@ -74,3 +74,8 @@ VALUES
 ('/images/fuente650.jpg', 7), ('/images/g203.jpg', 8), ('/images/kumara.jpg', 9),
 ('/images/monitor24.jpg', 10);
 
+INSERT INTO METODO_PAGO (descripción)
+VALUES 
+('Efectivo'), ('Tarjeta de Débito'), 
+('Tarjeta de Crédito'), 
+('Mercado Pago'), ('MODO'), ('Cheque');
