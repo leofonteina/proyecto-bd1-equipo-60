@@ -53,7 +53,7 @@ VALUES
 ('Mouse'), ('Teclados'), ('Monitores');
 
 
-INSERT INTO PRODUCTO (nombre, precio, stock, descripcion, estado, id_marca, id_categoria, id_usuario)
+INSERT INTO PRODUCTO (nombre, precio, stock, descripcion, id_marca, id_categoria, id_usuario)
 VALUES 
 ('Ryzen 5 5600', 220000.00, 15, 'Procesador 6 núcleos', 1, 1, 1),
 ('Core i5 12400F', 230000.00, 10, 'Procesador 6 núcleos', 2, 1, 1),
