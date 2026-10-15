@@ -41,30 +41,30 @@ VALUES
 (99999999, 'Vega', 'Pablo', 'pablo@mail.com', '3794999999', 1, 2, 9),
 (10101010, 'Cruz', 'Lucia', 'lucia@mail.com', '3794000000', 1, 2, 10);
 
-INSERT INTO MARCA (descripcion, estado)
+INSERT INTO MARCA (descripcion)
 VALUES 
-('AMD', 1), ('Intel', 1), ('ASUS', 1), ('MSI', 1), ('Gigabyte', 1), 
-('Corsair', 1), ('Kingston', 1), ('Logitech', 1), ('Samsung', 1), ('Redragon', 1);
+('AMD'), ('Intel'), ('ASUS'), ('MSI'), ('Gigabyte'),
+('Corsair'), ('Kingston'), ('Logitech'), ('Samsung'), ('Redragon');
 
-INSERT INTO CATEGORIA (descripcion, estado)
+INSERT INTO CATEGORIA (descripcion)
 VALUES 
-('Procesadores', 1), ('Placas de Video', 1), ('Motherboards', 1), ('Memoria RAM', 1), 
-('Almacenamiento SSD', 1), ('Fuentes de Poder', 1), ('Gabinetes', 1), 
-('Mouse', 1), ('Teclados', 1), ('Monitores', 1);
+('Procesadores'), ('Placas de Video'), ('Motherboards'), ('Memoria RAM'),
+('Almacenamiento SSD'), ('Fuentes de Poder'), ('Gabinetes'),
+('Mouse'), ('Teclados'), ('Monitores');
 
 
-INSERT INTO PRODUCTO (nombre, precio, stock, descripción, estado, id_marca, id_categoria, dni)
+INSERT INTO PRODUCTO (nombre, precio, stock, descripcion, estado, id_marca, id_categoria, id_usuario)
 VALUES 
-('Ryzen 5 5600', 220000.0, 15, 'Procesador 6 núcleos', 1, 1, 1, 11111111),       
-('Core i5 12400F', 230000.0, 10, 'Procesador 6 núcleos', 1, 2, 1, 11111111),     
-('RTX 3060 12GB', 450000.0, 5, 'Placa de video Nvidia', 1, 3, 2, 11111111),     
-('B550 Tomahawk', 180000.0, 8, 'Motherboard AM4', 1, 4, 3, 11111111),           
-('Vengeance 16GB', 65000.0, 20, 'RAM DDR4 3200MHz', 1, 6, 4, 11111111),         
-('SSD 1TB NVMe', 90000.0, 25, 'Disco Solido M.2', 1, 7, 5, 11111111),           
-('Fuente 650W 80+', 110000.0, 12, 'Fuente Certificada', 1, 5, 6, 11111111),      
-('Mouse G203', 35000.0, 30, 'Mouse Gamer RGB', 1, 8, 8, 11111111),               
-('Teclado Kumara', 45000.0, 18, 'Teclado Mecánico', 1, 10, 9, 11111111),        
-('Monitor 24 144Hz', 280000.0, 7, 'Monitor Gamer IPS', 1, 9, 10, 11111111);
+('Ryzen 5 5600', 220000.00, 15, 'Procesador 6 núcleos', 1, 1, 1),
+('Core i5 12400F', 230000.00, 10, 'Procesador 6 núcleos', 2, 1, 1),
+('RTX 3060 12GB', 450000.00, 5, 'Placa de video Nvidia', 3, 2, 1),
+('B550 Tomahawk', 180000.00, 8, 'Motherboard AM4', 4, 3, 1),
+('Vengeance 16GB', 65000.00, 20, 'RAM DDR4 3200MHz', 6, 4, 1),
+('SSD 1TB NVMe', 90000.00, 25, 'Disco Sólido M.2', 7, 5, 1),
+('Fuente 650W 80+', 110000.00, 12, 'Fuente Certificada', 5, 6, 1),
+('Mouse G203', 35000.00, 30, 'Mouse Gamer RGB', 8, 8, 1),
+('Teclado Kumara', 45000.00, 18, 'Teclado Mecánico', 10, 9, 1),
+('Monitor 24 144Hz', 280000.00, 7, 'Monitor Gamer IPS', 9, 10, 1);
 
 
 INSERT INTO IMAGEN (ruta_archivo, id_producto)
@@ -74,48 +74,86 @@ VALUES
 ('/images/fuente650.jpg', 7), ('/images/g203.jpg', 8), ('/images/kumara.jpg', 9),
 ('/images/monitor24.jpg', 10);
 
-INSERT INTO METODO_PAGO (descripción)
+INSERT INTO METODO_PAGO (descripcion)
 VALUES 
 ('Efectivo'), ('Tarjeta de Débito'), 
 ('Tarjeta de Crédito'), 
 ('Mercado Pago'), ('MODO'), ('Cheque');
 
 
-INSERT INTO VENTA (estado, domicilio_entrega, total, fecha_venta, dni)
-VALUES 
-('Entregado', 'Belgrano 456, Córdoba', 220000, '2026-09-01', 22222222),
-('Enviado', 'Sarmiento 789, Rosario', 450000, '2026-09-02', 33333333),
-('Pendiente', 'Av. Las Heras 101, Mendoza', 65000, '2026-09-03', 44444444),
-('Entregado', '25 de Mayo 202, Tucuman', 90000, '2026-09-04', 55555555),
-('Cancelado', 'Güemes 303, Salta', 35000, '2026-09-05', 66666666),
-('Enviado', 'Urquiza 404, Paraná', 280000, '2026-09-06', 77777777),
-('Entregado', 'Junín 505, Corrientes', 180000, '2026-09-07', 88888888),
-('Pendiente', 'Av. Mitre 606, Posadas', 45000, '2026-09-08', 99999999),
-('Entregado', 'Illia 707, Resistencia', 110000, '2026-09-09', 10101010),
-('Enviado', 'Belgrano 456, Córdoba', 230000, '2026-09-10', 22222222);
+INSERT INTO VENTA (domicilio_entrega, total, id_usuario)
+VALUES
+('Belgrano 456, Córdoba', 530000.00, 2),     
+('Sarmiento 789, Rosario', 560000.00, 3),  
+('Av. Las Heras 101, Mendoza', 260000.00, 4), 
+('25 de Mayo 202, Tucumán', 260000.00, 5), 
+('Güemes 303, Salta', 240000.00, 6),    
+('Urquiza 404, Paraná', 280000.00, 7),  
+('Junín 505, Corrientes', 820000.00, 8), 
+('Av. Mitre 606, Posadas', 160000.00, 9),  
+('Illia 707, Resistencia', 110000.00, 10), 
+('Belgrano 456, Córdoba', 360000.00, 2);  
 
 INSERT INTO VENTA_DETALLE (cantidad, precio_unitario, subtotal, id_producto, id_venta)
-VALUES 
-(1, 220000.0, 220000.0, 1, 1),  
-(1, 450000.0, 450000.0, 3, 2), 
-(1, 65000.0, 65000.0, 5, 3),    
-(1, 90000.0, 90000.0, 6, 4),   
-(1, 35000.0, 35000.0, 8, 5),    
-(1, 280000.0, 280000.0, 10, 6), 
-(1, 180000.0, 180000.0, 4, 7),  
-(1, 45000.0, 45000.0, 9, 8),    
-(1, 110000.0, 110000.0, 7, 9),  
-(1, 230000.0, 230000.0, 2, 10); 
+VALUES
+(1, 220000.00, 1 * 220000.00, 1, 1),
+(1, 180000.00, 1 * 180000.00, 4, 1),
+(2,  65000.00, 2 *  65000.00, 5, 1),
+(1, 450000.00, 1 * 450000.00, 3, 2),
+(1, 110000.00, 1 * 110000.00, 7, 2),
+(4,  65000.00, 4 *  65000.00, 5, 3),
+(2,  90000.00, 2 *  90000.00, 6, 4),
+(1,  35000.00, 1 *  35000.00, 8, 4),
+(1,  45000.00, 1 *  45000.00, 9, 4),
+(3,  35000.00, 3 *  35000.00, 8, 5),
+(3,  45000.00, 3 *  45000.00, 9, 5),
+(1, 280000.00, 1 * 280000.00, 10, 6),
+(2, 180000.00, 2 * 180000.00, 4, 7),
+(2, 230000.00, 2 * 230000.00, 2, 7),
+(2,  45000.00, 2 *  45000.00, 9, 8),
+(2,  35000.00, 2 *  35000.00, 8, 8),
+(1, 110000.00, 1 * 110000.00, 7, 9),
+(1, 230000.00, 1 * 230000.00, 2, 10),
+(2,  65000.00, 2 *  65000.00, 5, 10);
 
 INSERT INTO VENTA_PAGO (monto, id_venta, id_metodo_pago)
 VALUES 
-(220000.0, 1, 1),
-(450000.0, 2, 4),
-(65000.0, 3, 3),
-(90000.0, 4, 2),
-(35000.0, 5, 6),
-(280000.0, 6, 1),
-(180000.0, 7, 3),
-(45000.0, 8, 2),
-(110000.0, 9, 5),
-(230000.0, 10, 1);
+(130000.00, 1, 1),
+(400000.00, 1, 2),
+(560000.00, 2, 4),
+(260000.00, 3, 3),
+(260000.00, 4, 2), 
+(240000.00, 5, 6), 
+(280000.00, 6, 1),
+(500000.00, 7, 3), 
+(320000.00, 7, 5), 
+(160000.00, 8, 2), 
+(110000.00, 9, 5), 
+(100000.00, 10, 1), 
+(260000.00, 10, 4);
+
+-- Descontar stock
+UPDATE PRODUCTO SET stock = stock - 1 WHERE id_producto = 1;
+UPDATE PRODUCTO SET stock = stock - 3 WHERE id_producto = 2; 
+UPDATE PRODUCTO SET stock = stock - 1 WHERE id_producto = 3;
+UPDATE PRODUCTO SET stock = stock - 3 WHERE id_producto = 4;
+UPDATE PRODUCTO SET stock = stock - 8 WHERE id_producto = 5;
+UPDATE PRODUCTO SET stock = stock - 2 WHERE id_producto = 6;
+UPDATE PRODUCTO SET stock = stock - 2 WHERE id_producto = 7;
+UPDATE PRODUCTO SET stock = stock - 6 WHERE id_producto = 8;
+UPDATE PRODUCTO SET stock = stock - 6 WHERE id_producto = 9; 
+UPDATE PRODUCTO SET stock = stock - 1 WHERE id_producto = 10;
+
+-- Actualizar estado a ventas
+UPDATE VENTA SET estado = 'Entregado' WHERE id_venta IN (1, 2, 4, 6, 7, 9);
+UPDATE VENTA SET estado = 'Cancelado' WHERE id_venta = 5;
+
+-- Devolver stock
+UPDATE PRODUCTO SET stock = stock + 3 WHERE id_producto = 8;
+UPDATE PRODUCTO SET stock = stock + 3 WHERE id_producto = 9;
+
+-- Dar de baja a clientes
+UPDATE USUARIO SET estado = 0 WHERE id_usuario IN (6, 9);
+
+-- Discontinuar productos
+UPDATE PRODUCTO SET estado = 0 WHERE id_producto IN (4, 8);
