@@ -157,3 +157,9 @@ UPDATE USUARIO SET estado = 0 WHERE id_usuario IN (6, 9);
 
 -- Discontinuar productos
 UPDATE PRODUCTO SET estado = 0 WHERE id_producto IN (4, 8);
+
+-- Fechas actualizadas para el funcionamiento de Reporte Agregado
+UPDATE VENTA SET fecha_venta = '2026-09-10' WHERE id_venta IN (1, 2);
+UPDATE VENTA SET fecha_venta = '2026-09-25' WHERE id_venta IN (3, 4, 5);
+UPDATE VENTA SET fecha_venta = '2026-10-05' WHERE id_venta IN (6, 7);
+UPDATE VENTA SET fecha_venta = '2026-10-12' WHERE id_venta IN (8, 9, 10);
