@@ -52,8 +52,8 @@ Script asociado:
 
 | Script | Contenido |
 |---|---|
-| [`sql/tecnico/transacciones/implementacion_transacciones.sql`](sql/tecnico/transacciones/implementacion_transacciones.sql) | Procedimiento almacenado con la transacción y casos de prueba. |
-| [`sql/tecnico/transacciones/demostracion_transacciones.sql`](sql/tecnico/transacciones/demostracion_transacciones.sql) | Casos de Prueba. |
+| [`sql/tecnico/transacciones/implementacion_transacciones.sql`](../../sql/tecnico/transacciones/implementacion_transacciones.sql) | Procedimiento almacenado con la transacción y casos de prueba. |
+| [`sql/tecnico/transacciones/demostracion_transacciones.sql`](../../sql/tecnico/transacciones/demostracion_transacciones.sql) | Casos de Prueba. |
 
 ### Objetos creados
 
