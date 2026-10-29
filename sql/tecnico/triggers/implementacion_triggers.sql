@@ -1,26 +1,3 @@
--- =====================================================================
--- Etapa V - Triggers de auditoría
--- Script de implementación
---
--- Crea:
---   * AUDITORIA_VENTA              : historial de UPDATE y DELETE sobre VENTA
---   * AUDITORIA_INTENTOS_BORRADO   : intentos de DELETE bloqueados
---   * t_update_venta               : trigger AFTER UPDATE sobre VENTA
---   * t_delete_venta               : trigger AFTER DELETE sobre VENTA
---   * t_bloquear_delete_producto   : trigger INSTEAD OF DELETE sobre PRODUCTO
---
--- IMPORTANTE:
---   * Ejecutar con la base de datos del proyecto seleccionada.
---   * El script es re-ejecutable: elimina los objetos de versiones
---     anteriores y los vuelve a crear. Se pierde el historial que
---     tuvieran las tablas de auditoría.
--- =====================================================================
-
--- ---------------------------------------------------------------------
--- 0. Limpieza de versiones anteriores
---    (evita que triggers viejos sigan activos y escriban en tablas
---     con otra estructura)
--- ---------------------------------------------------------------------
 DROP TRIGGER IF EXISTS dbo.t_update;
 DROP TRIGGER IF EXISTS dbo.t_delete;
 DROP TRIGGER IF EXISTS dbo.trg_bloquear_delete_producto;
@@ -33,9 +10,7 @@ DROP TABLE IF EXISTS AUDITORIA_VENTA;
 DROP TABLE IF EXISTS AUDITORIA_INTENTOS_BORRADO;
 GO
 
--- ---------------------------------------------------------------------
 -- 1. Tablas auxiliares de auditoría
--- ---------------------------------------------------------------------
 CREATE TABLE AUDITORIA_VENTA
 (
   id_auditoria                   INT IDENTITY NOT NULL,
@@ -76,10 +51,9 @@ CREATE TABLE AUDITORIA_INTENTOS_BORRADO
 );
 GO
 
--- ---------------------------------------------------------------------
 -- 2. Trigger de auditoría para UPDATE sobre VENTA
 --    Registra una fila por cada venta que cambió algún valor.
--- ---------------------------------------------------------------------
+  
 CREATE OR ALTER TRIGGER t_update_venta
 ON VENTA
 AFTER UPDATE
@@ -110,10 +84,9 @@ BEGIN
 END;
 GO
 
--- ---------------------------------------------------------------------
 -- 3. Trigger de auditoría para DELETE sobre VENTA
 --    Guarda los valores que tenía la venta borrada (los "nuevos" quedan NULL).
--- ---------------------------------------------------------------------
+  
 CREATE OR ALTER TRIGGER t_delete_venta
 ON VENTA
 AFTER DELETE
@@ -132,11 +105,10 @@ BEGIN
 END;
 GO
 
--- ---------------------------------------------------------------------
 -- 4. Trigger que bloquea el DELETE sobre PRODUCTO
 --    INSTEAD OF: el borrado nunca se ejecuta. Registra el intento y
 --    emite un mensaje de error.
--- ---------------------------------------------------------------------
+  
 CREATE OR ALTER TRIGGER t_bloquear_delete_producto
 ON PRODUCTO
 INSTEAD OF DELETE
