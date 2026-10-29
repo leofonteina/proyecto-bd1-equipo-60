@@ -55,8 +55,8 @@ Scripts asociados:
 
 | Script | Contenido |
 |---|---|
-| [`sql/tecnico/triggers/implementacion_triggers.sql`](sql/tecnico/triggers/implementacion_triggers.sql) | Tablas de auditoría y los tres triggers. |
-| [`sql/tecnico/triggers/demostracion_triggers.sql`](/sql/tecnico/triggers/demostracion_triggers.sql) | Casos de prueba. |
+| [`sql/tecnico/triggers/implementacion_triggers.sql`](../../sql/tecnico/triggers/implementacion_triggers.sql) | Tablas de auditoría y los tres triggers. |
+| [`sql/tecnico/triggers/demostracion_triggers.sql`](../../sql/tecnico/triggers/demostracion_triggers.sql) | Casos de prueba. |
 
 ### Objetos creados
 
@@ -245,7 +245,7 @@ Si el `INSTEAD OF DELETE` estuviera sobre `VENTA`, el borrado nunca se ejecutar�
 
 ## 5. Demostración y resultados
 
-Las pruebas se ejecutan sobre **tres ventas de prueba** creadas por el propio script (domicilio `PRUEBA AUDITORIA ...`), de modo de no alterar las ventas 1 a 10, de las que dependen las consultas de la Etapa IV. Script completo: [`demostracion_triggers.sql`](sql/tecnico/triggers/demostracion_triggers.sql).
+Las pruebas se ejecutan sobre **tres ventas de prueba** creadas por el propio script (domicilio `PRUEBA AUDITORIA ...`), de modo de no alterar las ventas 1 a 10, de las que dependen las consultas de la Etapa IV. Script completo: Script completo: [`demostracion_triggers.sql`](../../sql/tecnico/triggers/demostracion_triggers.sql).
 
 > Los `id_venta` de los resultados (11, 12 y 13) corresponden a una base recién cargada con el script de datos de prueba. Pueden variar si se insertaron ventas adicionales. Las columnas `fecha` y `usuario_bd` dependen del momento y del usuario que ejecute las pruebas.
 
