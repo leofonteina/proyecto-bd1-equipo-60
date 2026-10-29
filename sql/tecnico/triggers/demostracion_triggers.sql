@@ -1,19 +1,3 @@
--- =====================================================================
--- Etapa V - Triggers de auditoría
--- Script de demostración (casos de prueba)
---
--- Requisito: haber ejecutado antes implementacion_triggers.sql
---
--- Las pruebas se hacen sobre ventas de prueba creadas por este script
--- (domicilio 'PRUEBA AUDITORIA ...') para no alterar las ventas 1 a 10,
--- de las que dependen las consultas de la Etapa IV.
---
--- =====================================================================
-
--- ---------------------------------------------------------------------
--- 5.0 PREPARACIÓN
--- ---------------------------------------------------------------------
-
 -- Verificación de los triggers creados
 SELECT t.name                    AS trigger_nombre,
        OBJECT_NAME(t.parent_id)  AS tabla,
