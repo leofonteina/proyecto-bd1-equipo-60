@@ -1,363 +1,378 @@
--- =======================================================================================
--- 1. TIPO DE TABLA PARA LA VENTA CON VARIOS PRODUCTOS
--- =======================================================================================
-IF TYPE_ID(N'dbo.tipo_item_venta') IS NULL
-BEGIN
-    CREATE TYPE dbo.tipo_item_venta AS TABLE
-    (
-        id_producto INT NOT NULL,
-        cantidad    INT NOT NULL
-    );
-END
+CREATE TYPE dbo.tipo_item_venta AS TABLE
+(
+    id_producto INT NOT NULL,
+    cantidad INT NOT NULL
+);
 GO
 
-
--- =======================================================================================
--- 2. REGISTRAR UNA VENTA (UN PRODUCTO)
--- =======================================================================================
-CREATE OR ALTER PROCEDURE sp_RegistrarVentaTransaccional
-    @id_usuario INT,
+CREATE PROCEDURE dbo.sp_RegistrarVenta
     @domicilio_entrega VARCHAR(150),
-    @id_producto INT,
-    @cantidad INT,
-    @id_metodo_pago INT
+    @id_metodo_pago INT,
+    @items dbo.tipo_item_venta READONLY,
+    @id_venta INT OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON; -- ante un error cancela automaticamente toda la transaccion
+
+    SET @id_venta = NULL;
 
     BEGIN TRY
+
         BEGIN TRANSACTION;
 
+        DECLARE @id_usuario INT;
+
+        -- SESSION_CONTEXT lee el valor guardado en la sesion y TRY_CONVERT lo pasa a INT (devuelve NULL si no puede)
+        SET @id_usuario =
+            TRY_CONVERT(INT, SESSION_CONTEXT(N'id_usuario'));
+
+        IF @id_usuario IS NULL
+        BEGIN
+            -- THROW lanza un error con numero, mensaje y estado, y salta al CATCH
+            THROW 50001,
+                'No se pudo identificar al usuario de la sesion.',
+                1;
+        END;
+
         DECLARE @estado_usuario INT;
-        DECLARE @estado_producto INT;
-        DECLARE @stock_actual INT;
-        DECLARE @precio_unitario DECIMAL(10,2);
         DECLARE @total DECIMAL(10,2);
-        DECLARE @id_venta_nueva INT;
+        DECLARE @importe_final DECIMAL(10,2);
+        DECLARE @cantidad_productos INT;
 
-        -- RT.05: datos de entrada válidos
-        IF @domicilio_entrega IS NULL OR LTRIM(RTRIM(@domicilio_entrega)) = ''
+        -- LTRIM y RTRIM sacan los espacios de los costados para detectar un domicilio vacio
+        IF @domicilio_entrega IS NULL
+           OR LTRIM(RTRIM(@domicilio_entrega)) = ''
         BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: El domicilio de entrega es obligatorio.';
-            RETURN;
-        END
+            THROW 50002,
+                'El domicilio de entrega es obligatorio.',
+                1;
+        END;
 
-        IF @cantidad IS NULL OR @cantidad <= 0
+        IF NOT EXISTS (SELECT 1 FROM @items)
         BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: La cantidad debe ser mayor a 0.';
-            RETURN;
-        END
+            THROW 50003,
+                'La venta debe incluir al menos un producto.',
+                1;
+        END;
 
-        -- RT.03: el usuario debe existir y estar activo
+        IF EXISTS
+        (
+            SELECT 1
+            FROM @items
+            WHERE cantidad <= 0
+        )
+        BEGIN
+            THROW 50004,
+                'Todas las cantidades deben ser mayores a cero.',
+                1;
+        END;
+
         SELECT @estado_usuario = estado
-        FROM USUARIO
+        FROM dbo.USUARIO
         WHERE id_usuario = @id_usuario;
 
         IF @estado_usuario IS NULL
         BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: El usuario no existe.';
-            RETURN;
-        END
+            THROW 50005,
+                'El usuario no existe.',
+                1;
+        END;
 
         IF @estado_usuario = 0
         BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: El usuario está dado de baja.';
-            RETURN;
-        END
+            THROW 50006,
+                'El usuario se encuentra dado de baja.',
+                1;
+        END;
 
-        -- RT.05: el método de pago debe existir
-        IF NOT EXISTS (SELECT 1 FROM METODO_PAGO WHERE id_metodo_pago = @id_metodo_pago)
+        IF NOT EXISTS
+        (
+            SELECT 1
+            FROM dbo.METODO_PAGO
+            WHERE id_metodo_pago = @id_metodo_pago
+        )
         BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: El método de pago no existe.';
-            RETURN;
-        END
+            THROW 50007,
+                'El metodo de pago no existe.',
+                1;
+        END;
 
-        -- Paso A: obtener datos del producto (la fila queda bloqueada hasta el final de la transacción)
-        SELECT @stock_actual = stock, @precio_unitario = precio, @estado_producto = estado
-        FROM PRODUCTO WITH (UPDLOCK, ROWLOCK)
-        WHERE id_producto = @id_producto;
+        DECLARE @lineas TABLE
+        (
+            id_producto INT PRIMARY KEY,
+            cantidad BIGINT NOT NULL,
+            precio DECIMAL(10,2) NULL,
+            stock INT NULL,
+            estado INT NULL
+        );
 
-        -- RT.04: el producto debe existir y estar activo
-        IF @estado_producto IS NULL
+        -- SUM suma las cantidades por producto y CONVERT las pasa a BIGINT para evitar un desborde
+        IF EXISTS
+        (
+            SELECT id_producto
+            FROM @items
+            GROUP BY id_producto
+            HAVING SUM(CONVERT(BIGINT, cantidad)) > 2147483647
+        )
         BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: El producto no existe.';
-            RETURN;
-        END
+            THROW 50008,
+                'La cantidad total de un producto supera el limite permitido.',
+                1;
+        END;
 
-        IF @estado_producto = 0
+        INSERT INTO @lineas (id_producto, cantidad)
+        SELECT
+            id_producto,
+            SUM(CONVERT(BIGINT, cantidad))
+        FROM @items
+        GROUP BY id_producto;
+
+        -- COUNT cuenta cuantos productos distintos tiene la venta
+        SELECT @cantidad_productos = COUNT(*)
+        FROM @lineas;
+
+        -- UPDLOCK y ROWLOCK bloquean las filas de PRODUCTO hasta terminar la transaccion
+        UPDATE l
+        SET
+            l.precio = p.precio,
+            l.stock = p.stock,
+            l.estado = p.estado
+        FROM @lineas AS l
+        INNER JOIN dbo.PRODUCTO AS p
+            WITH (UPDLOCK, ROWLOCK)
+            ON p.id_producto = l.id_producto;
+
+        IF EXISTS
+        (
+            SELECT 1
+            FROM @lineas
+            WHERE estado IS NULL
+        )
         BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: El producto está discontinuado.';
-            RETURN;
-        END
+            THROW 50009,
+                'Uno o mas productos no existen.',
+                1;
+        END;
 
-        -- RN.01: verificar stock
-        IF @stock_actual < @cantidad
+        IF EXISTS
+        (
+            SELECT 1
+            FROM @lineas
+            WHERE estado = 0
+        )
         BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: Stock insuficiente para el producto solicitado.';
-            RETURN;
-        END
+            THROW 50010,
+                'Uno o mas productos se encuentran discontinuados.',
+                1;
+        END;
 
-        -- Paso B: encabezado de la venta
-        SET @total = @cantidad * @precio_unitario;
+        IF EXISTS
+        (
+            SELECT 1
+            FROM @lineas
+            WHERE stock < cantidad
+        )
+        BEGIN
+            THROW 50011,
+                'Stock insuficiente para uno o mas productos.',
+                1;
+        END;
 
-        INSERT INTO VENTA (estado, domicilio_entrega, total, fecha_venta, id_usuario)
-        VALUES ('Entregado', @domicilio_entrega, @total, GETDATE(), @id_usuario);
+        SELECT @total =
+            SUM(CONVERT(DECIMAL(10,2), cantidad) * precio)
+        FROM @lineas;
 
-        SET @id_venta_nueva = SCOPE_IDENTITY();
+        -- fn_CalcularImporteConDescuento aplica al total el descuento del metodo de pago (usa fn_PorcentajeDescuentoMetodoPago)
+        SET @importe_final = dbo.fn_CalcularImporteConDescuento(@total, @id_metodo_pago);
 
-        -- Paso C: detalle
-        INSERT INTO VENTA_DETALLE (cantidad, precio_unitario, subtotal, id_producto, id_venta)
-        VALUES (@cantidad, @precio_unitario, @total, @id_producto, @id_venta_nueva);
+        INSERT INTO dbo.VENTA
+        (
+            domicilio_entrega,
+            total,
+            id_usuario
+        )
+        VALUES
+        (
+            @domicilio_entrega,
+            @importe_final,
+            @id_usuario
+        );
 
-        -- Paso D: pago
-        INSERT INTO VENTA_PAGO (monto, id_venta, id_metodo_pago)
-        VALUES (@total, @id_venta_nueva, @id_metodo_pago);
+        -- SCOPE_IDENTITY devuelve el ultimo id generado por el IDENTITY en este procedimiento
+        SET @id_venta = CONVERT(INT, SCOPE_IDENTITY());
 
-        -- Paso E: descontar stock (RN.02)
-        UPDATE PRODUCTO
-        SET stock = stock - @cantidad
-        WHERE id_producto = @id_producto;
+        INSERT INTO dbo.VENTA_DETALLE
+        (
+            cantidad,
+            precio_unitario,
+            subtotal,
+            id_producto,
+            id_venta
+        )
+        SELECT
+            CONVERT(INT, cantidad),
+            precio,
+            CONVERT(DECIMAL(10,2), cantidad * precio),
+            id_producto,
+            @id_venta
+        FROM @lineas;
+
+        INSERT INTO dbo.VENTA_PAGO
+        (
+            monto,
+            id_venta,
+            id_metodo_pago
+        )
+        VALUES
+        (
+            @importe_final,
+            @id_venta,
+            @id_metodo_pago
+        );
+
+        UPDATE p
+        SET p.stock = p.stock - CONVERT(INT, l.cantidad)
+        FROM dbo.PRODUCTO AS p
+        INNER JOIN @lineas AS l
+            ON l.id_producto = p.id_producto;
 
         COMMIT TRANSACTION;
-        PRINT 'ÉXITO: Venta registrada, pago asentado y stock actualizado correctamente.';
+
+        SELECT
+            @id_venta AS id_venta,
+            @importe_final AS total,
+            @cantidad_productos AS cantidad_productos,
+            'Venta registrada correctamente.' AS mensaje;
+
+        -- fn_EstadoStockProducto devuelve el diagnostico de stock del producto, se usa para avisar los que quedaron para reponer
+        SELECT
+            p.id_producto,
+            p.nombre,
+            p.stock,
+            dbo.fn_EstadoStockProducto(p.id_producto) AS estado_stock
+        FROM dbo.PRODUCTO AS p
+        INNER JOIN @lineas AS l
+            ON l.id_producto = p.id_producto
+        WHERE dbo.fn_EstadoStockProducto(p.id_producto)
+            IN ('Stock Crítico (Reponer)', 'Sin Stock');
+
     END TRY
+
     BEGIN CATCH
-        IF @@TRANCOUNT > 0
+
+        -- XACT_STATE devuelve distinto de 0 si hay una transaccion abierta que se puede deshacer
+        IF XACT_STATE() <> 0
         BEGIN
             ROLLBACK TRANSACTION;
-        END
-        PRINT 'ERROR INESPERADO: Se ejecutó un ROLLBACK. Ningún dato fue modificado.';
-        PRINT 'Detalle del error: ' + ERROR_MESSAGE();
-    END CATCH
+        END;
+
+        SET @id_venta = NULL;
+
+        -- THROW sin parametros vuelve a lanzar el error original
+        THROW;
+
+    END CATCH;
 END;
 GO
 
-
--- =======================================================================================
--- 3. CANCELAR UNA VENTA (DEVUELVE EL STOCK)
--- =======================================================================================
-CREATE OR ALTER PROCEDURE sp_CancelarVentaTransaccional
+CREATE PROCEDURE dbo.sp_CancelarVenta
     @id_venta INT
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
     BEGIN TRY
+
         BEGIN TRANSACTION;
 
+        DECLARE @id_usuario INT;
+
+        SET @id_usuario =
+            TRY_CONVERT(INT, SESSION_CONTEXT(N'id_usuario'));
+
+        IF @id_usuario IS NULL
+        BEGIN
+            THROW 50020,
+                'No se pudo identificar al usuario de la sesion.',
+                1;
+        END;
+
+        DECLARE @id_propietario INT;
         DECLARE @estado VARCHAR(50);
 
-        -- Paso A: leer el estado de la venta y bloquear la fila
-        SELECT @estado = estado
-        FROM VENTA WITH (UPDLOCK, ROWLOCK)
+        SELECT
+            @id_propietario = id_usuario,
+            @estado = estado
+        FROM dbo.VENTA WITH (UPDLOCK, ROWLOCK)
         WHERE id_venta = @id_venta;
 
-        -- La venta no existe
-        IF @estado IS NULL
+        IF @id_propietario IS NULL
         BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: La venta no existe.';
-            RETURN;
-        END
+            THROW 50021,
+                'La venta indicada no existe.',
+                1;
+        END;
 
-        -- RT.01: no se puede cancelar dos veces
+        IF @id_propietario <> @id_usuario
+        BEGIN
+            THROW 50022,
+                'No tiene permisos para cancelar esta venta.',
+                1;
+        END;
+
         IF @estado = 'Cancelado'
         BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: La venta ya estaba cancelada.';
-            RETURN;
-        END
+            THROW 50023,
+                'La venta ya se encuentra cancelada.',
+                1;
+        END;
 
-        -- Paso B: devolver el stock de todos los productos de la venta (RT.02)
+        IF @estado <> 'Pendiente'
+        BEGIN
+            THROW 50024,
+                'Solo se pueden cancelar ventas pendientes.',
+                1;
+        END;
+
+        -- SUM con GROUP BY agrupa la cantidad vendida por producto para devolverla al stock
         UPDATE p
         SET p.stock = p.stock + d.cantidad_total
-        FROM PRODUCTO p
-        INNER JOIN (SELECT id_producto, SUM(cantidad) AS cantidad_total
-                    FROM VENTA_DETALLE
-                    WHERE id_venta = @id_venta
-                    GROUP BY id_producto) d ON d.id_producto = p.id_producto;
+        FROM dbo.PRODUCTO AS p
+        INNER JOIN
+        (
+            SELECT
+                id_producto,
+                SUM(cantidad) AS cantidad_total
+            FROM dbo.VENTA_DETALLE
+            WHERE id_venta = @id_venta
+            GROUP BY id_producto
+        ) AS d
+            ON d.id_producto = p.id_producto;
 
-        -- Paso C: marcar la venta como cancelada
-        UPDATE VENTA
+        UPDATE dbo.VENTA
         SET estado = 'Cancelado'
         WHERE id_venta = @id_venta;
 
         COMMIT TRANSACTION;
-        PRINT 'ÉXITO: Venta cancelada y stock devuelto correctamente.';
+
+        SELECT
+            @id_venta AS id_venta,
+            'Venta cancelada y stock repuesto correctamente.'
+                AS mensaje;
+
     END TRY
+
     BEGIN CATCH
-        IF @@TRANCOUNT > 0
+
+        IF XACT_STATE() <> 0
         BEGIN
             ROLLBACK TRANSACTION;
-        END
-        PRINT 'ERROR INESPERADO: Se ejecutó un ROLLBACK. Ningún dato fue modificado.';
-        PRINT 'Detalle del error: ' + ERROR_MESSAGE();
-    END CATCH
-END;
-GO
+        END;
 
+        THROW;
 
--- =======================================================================================
--- 4. REGISTRAR UNA VENTA CON VARIOS PRODUCTOS
--- =======================================================================================
-CREATE OR ALTER PROCEDURE sp_RegistrarVentaMultipleTransaccional
-    @id_usuario INT,
-    @domicilio_entrega VARCHAR(150),
-    @id_metodo_pago INT,
-    @items dbo.tipo_item_venta READONLY
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    BEGIN TRY
-        BEGIN TRANSACTION;
-
-        DECLARE @estado_usuario INT;
-        DECLARE @total DECIMAL(10,2);
-        DECLARE @id_venta_nueva INT;
-        DECLARE @cantidad_productos INT;
-
-        -- Productos consolidados: si un producto se repite, se suman sus cantidades (RT.06)
-        DECLARE @lineas TABLE
-        (
-            id_producto INT PRIMARY KEY,
-            cantidad    INT NOT NULL,
-            precio      DECIMAL(10,2) NULL,
-            stock       INT NULL,
-            estado      INT NULL
-        );
-
-        -- RT.06: la venta debe incluir al menos un producto
-        IF NOT EXISTS (SELECT 1 FROM @items)
-        BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: La venta debe incluir al menos un producto.';
-            RETURN;
-        END
-
-        -- RT.05: datos de entrada válidos
-        IF EXISTS (SELECT 1 FROM @items WHERE cantidad <= 0)
-        BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: Todas las cantidades deben ser mayores a 0.';
-            RETURN;
-        END
-
-        IF @domicilio_entrega IS NULL OR LTRIM(RTRIM(@domicilio_entrega)) = ''
-        BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: El domicilio de entrega es obligatorio.';
-            RETURN;
-        END
-
-        -- RT.03: el usuario debe existir y estar activo
-        SELECT @estado_usuario = estado
-        FROM USUARIO
-        WHERE id_usuario = @id_usuario;
-
-        IF @estado_usuario IS NULL
-        BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: El usuario no existe.';
-            RETURN;
-        END
-
-        IF @estado_usuario = 0
-        BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: El usuario está dado de baja.';
-            RETURN;
-        END
-
-        -- RT.05: el método de pago debe existir
-        IF NOT EXISTS (SELECT 1 FROM METODO_PAGO WHERE id_metodo_pago = @id_metodo_pago)
-        BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: El método de pago no existe.';
-            RETURN;
-        END
-
-        -- Paso A: consolidar los productos repetidos
-        INSERT INTO @lineas (id_producto, cantidad)
-        SELECT id_producto, SUM(cantidad)
-        FROM @items
-        GROUP BY id_producto;
-
-        SELECT @cantidad_productos = COUNT(*) FROM @lineas;
-
-        -- Paso B: traer precio, stock y estado de cada producto (las filas quedan bloqueadas)
-        UPDATE l
-        SET l.precio = p.precio,
-            l.stock  = p.stock,
-            l.estado = p.estado
-        FROM @lineas l
-        INNER JOIN PRODUCTO p WITH (UPDLOCK, ROWLOCK) ON p.id_producto = l.id_producto;
-
-        -- RT.04: todos los productos deben existir y estar activos
-        IF EXISTS (SELECT 1 FROM @lineas WHERE estado IS NULL)
-        BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: Alguno de los productos no existe.';
-            RETURN;
-        END
-
-        IF EXISTS (SELECT 1 FROM @lineas WHERE estado = 0)
-        BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: Alguno de los productos está discontinuado.';
-            RETURN;
-        END
-
-        -- RN.01: stock suficiente para todos los productos
-        IF EXISTS (SELECT 1 FROM @lineas WHERE stock < cantidad)
-        BEGIN
-            ROLLBACK TRANSACTION;
-            PRINT 'OPERACIÓN CANCELADA: Stock insuficiente en al menos un producto.';
-            RETURN;
-        END
-
-        -- Paso C: encabezado de la venta
-        SELECT @total = SUM(cantidad * precio) FROM @lineas;
-
-        INSERT INTO VENTA (estado, domicilio_entrega, total, fecha_venta, id_usuario)
-        VALUES ('Entregado', @domicilio_entrega, @total, GETDATE(), @id_usuario);
-
-        SET @id_venta_nueva = SCOPE_IDENTITY();
-
-        -- Paso D: un detalle por cada producto
-        INSERT INTO VENTA_DETALLE (cantidad, precio_unitario, subtotal, id_producto, id_venta)
-        SELECT cantidad, precio, cantidad * precio, id_producto, @id_venta_nueva
-        FROM @lineas;
-
-        -- Paso E: pago por el total
-        INSERT INTO VENTA_PAGO (monto, id_venta, id_metodo_pago)
-        VALUES (@total, @id_venta_nueva, @id_metodo_pago);
-
-        -- Paso F: descontar el stock de todos los productos (RN.02)
-        UPDATE p
-        SET p.stock = p.stock - l.cantidad
-        FROM PRODUCTO p
-        INNER JOIN @lineas l ON l.id_producto = p.id_producto;
-
-        COMMIT TRANSACTION;
-        PRINT 'ÉXITO: Venta registrada con ' + CAST(@cantidad_productos AS VARCHAR(10))
-            + ' producto(s), pago asentado y stock actualizado correctamente.';
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0
-        BEGIN
-            ROLLBACK TRANSACTION;
-        END
-        PRINT 'ERROR INESPERADO: Se ejecutó un ROLLBACK. Ningún dato fue modificado.';
-        PRINT 'Detalle del error: ' + ERROR_MESSAGE();
-    END CATCH
+    END CATCH;
 END;
 GO
