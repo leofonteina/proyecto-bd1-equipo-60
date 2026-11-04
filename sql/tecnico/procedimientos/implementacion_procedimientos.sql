@@ -13,13 +13,10 @@ CREATE PROCEDURE dbo.sp_RegistrarVenta
 AS
 BEGIN
     SET NOCOUNT ON;
-    SET XACT_ABORT ON; -- ante un error cancela automaticamente toda la transaccion
 
     SET @id_venta = NULL;
 
     BEGIN TRY
-
-        BEGIN TRANSACTION;
 
         DECLARE @id_usuario INT;
 
@@ -132,7 +129,6 @@ BEGIN
         SELECT @cantidad_productos = COUNT(*)
         FROM @lineas;
 
-        -- UPDLOCK y ROWLOCK bloquean las filas de PRODUCTO hasta terminar la transaccion
         UPDATE l
         SET
             l.precio = p.precio,
@@ -140,7 +136,6 @@ BEGIN
             l.estado = p.estado
         FROM @lineas AS l
         INNER JOIN dbo.PRODUCTO AS p
-            WITH (UPDLOCK, ROWLOCK)
             ON p.id_producto = l.id_producto;
 
         IF EXISTS
@@ -237,8 +232,6 @@ BEGIN
         INNER JOIN @lineas AS l
             ON l.id_producto = p.id_producto;
 
-        COMMIT TRANSACTION;
-
         SELECT
             @id_venta AS id_venta,
             @importe_final AS total,
@@ -261,12 +254,6 @@ BEGIN
 
     BEGIN CATCH
 
-        -- XACT_STATE devuelve distinto de 0 si hay una transaccion abierta que se puede deshacer
-        IF XACT_STATE() <> 0
-        BEGIN
-            ROLLBACK TRANSACTION;
-        END;
-
         SET @id_venta = NULL;
 
         -- THROW sin parametros vuelve a lanzar el error original
@@ -281,98 +268,77 @@ CREATE PROCEDURE dbo.sp_CancelarVenta
 AS
 BEGIN
     SET NOCOUNT ON;
-    SET XACT_ABORT ON;
 
-    BEGIN TRY
+    DECLARE @id_usuario INT;
+    DECLARE @id_propietario INT;
+    DECLARE @estado VARCHAR(50);
 
-        BEGIN TRANSACTION;
+    SET @id_usuario =
+        TRY_CONVERT(INT, SESSION_CONTEXT(N'id_usuario'));
 
-        DECLARE @id_usuario INT;
+    IF @id_usuario IS NULL
+    BEGIN
+        THROW 50020,
+            'No se pudo identificar al usuario de la sesion.',
+            1;
+    END;
 
-        SET @id_usuario =
-            TRY_CONVERT(INT, SESSION_CONTEXT(N'id_usuario'));
+    SELECT
+        @id_propietario = id_usuario,
+        @estado = estado
+    FROM dbo.VENTA
+    WHERE id_venta = @id_venta;
 
-        IF @id_usuario IS NULL
-        BEGIN
-            THROW 50020,
-                'No se pudo identificar al usuario de la sesion.',
-                1;
-        END;
+    IF @id_propietario IS NULL
+    BEGIN
+        THROW 50021,
+            'La venta indicada no existe.',
+            1;
+    END;
 
-        DECLARE @id_propietario INT;
-        DECLARE @estado VARCHAR(50);
+    IF @id_propietario <> @id_usuario
+    BEGIN
+        THROW 50022,
+            'No tiene permisos para cancelar esta venta.',
+            1;
+    END;
 
+    IF @estado = 'Cancelado'
+    BEGIN
+        THROW 50023,
+            'La venta ya se encuentra cancelada.',
+            1;
+    END;
+
+    IF @estado <> 'Pendiente'
+    BEGIN
+        THROW 50024,
+            'Solo se pueden cancelar ventas pendientes.',
+            1;
+    END;
+
+    -- SUM con GROUP BY agrupa la cantidad vendida por producto para devolverla al stock
+    UPDATE p
+    SET p.stock = p.stock + d.cantidad_total
+    FROM dbo.PRODUCTO AS p
+    INNER JOIN
+    (
         SELECT
-            @id_propietario = id_usuario,
-            @estado = estado
-        FROM dbo.VENTA WITH (UPDLOCK, ROWLOCK)
-        WHERE id_venta = @id_venta;
+            id_producto,
+            SUM(cantidad) AS cantidad_total
+        FROM dbo.VENTA_DETALLE
+        WHERE id_venta = @id_venta
+        GROUP BY id_producto
+    ) AS d
+        ON d.id_producto = p.id_producto;
 
-        IF @id_propietario IS NULL
-        BEGIN
-            THROW 50021,
-                'La venta indicada no existe.',
-                1;
-        END;
+    UPDATE dbo.VENTA
+    SET estado = 'Cancelado'
+    WHERE id_venta = @id_venta;
 
-        IF @id_propietario <> @id_usuario
-        BEGIN
-            THROW 50022,
-                'No tiene permisos para cancelar esta venta.',
-                1;
-        END;
-
-        IF @estado = 'Cancelado'
-        BEGIN
-            THROW 50023,
-                'La venta ya se encuentra cancelada.',
-                1;
-        END;
-
-        IF @estado <> 'Pendiente'
-        BEGIN
-            THROW 50024,
-                'Solo se pueden cancelar ventas pendientes.',
-                1;
-        END;
-
-        -- SUM con GROUP BY agrupa la cantidad vendida por producto para devolverla al stock
-        UPDATE p
-        SET p.stock = p.stock + d.cantidad_total
-        FROM dbo.PRODUCTO AS p
-        INNER JOIN
-        (
-            SELECT
-                id_producto,
-                SUM(cantidad) AS cantidad_total
-            FROM dbo.VENTA_DETALLE
-            WHERE id_venta = @id_venta
-            GROUP BY id_producto
-        ) AS d
-            ON d.id_producto = p.id_producto;
-
-        UPDATE dbo.VENTA
-        SET estado = 'Cancelado'
-        WHERE id_venta = @id_venta;
-
-        COMMIT TRANSACTION;
-
-        SELECT
-            @id_venta AS id_venta,
-            'Venta cancelada y stock repuesto correctamente.'
-                AS mensaje;
-
-    END TRY
-
-    BEGIN CATCH
-
-        IF XACT_STATE() <> 0
-        BEGIN
-            ROLLBACK TRANSACTION;
-        END;
-
-        THROW;
-
-    END CATCH;
+    SELECT
+        @id_venta AS id_venta,
+        'Venta cancelada y stock repuesto correctamente.'
+            AS mensaje;
 END;
 GO
