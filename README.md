@@ -100,7 +100,23 @@ Todo el código está hecho en lenguaje SQL (T-SQL) con la interfaz de SQL Serve
 
 ## Etapa 5
 
-`⚠ EN CONSTRUCCION ⚠`
+**Temas técnicos.** Mecanismos avanzados del motor (SQL Server) aplicados al sistema: procedimientos y funciones, transacciones, triggers de auditoría, seguridad e índices.
+
+| Tema | Documento | Implementación | Demostración |
+|---|---|---|---|
+| **Procedimientos** | [procedimientos-funciones.md](docs/etapa-05/procedimientos-funciones.md) | [`implementacion_procedimientos.sql`](sql/tecnico/procedimientos/implementacion_procedimientos.sql) | [`demostracion_procedimiento.sql`](sql/tecnico/procedimientos/demostracion_procedimiento.sql) |
+| **Funciones** | [procedimientos-funciones.md](docs/etapa-05/procedimientos-funciones.md) | [`implementacion_funciones.sql`](sql/tecnico/funciones/implementacion_funciones.sql) | [`demostracion_funciones.sql`](sql/tecnico/funciones/demostracion_funciones.sql) |
+| **Transacciones** | [transacciones.md](docs/etapa-05/transacciones.md) | [`implementacion_transacciones.sql`](sql/tecnico/transacciones/implementacion_transacciones.sql) | [`demostracion_transacciones.sql`](sql/tecnico/transacciones/demostracion_transacciones.sql) |
+| **Triggers de auditoría** | [triggers-auditoria.md](docs/etapa-05/triggers-auditoria.md) | [`implementacion_triggers.sql`](sql/tecnico/triggers/implementacion_triggers.sql) | [`demostracion_triggers.sql`](sql/tecnico/triggers/demostracion_triggers.sql) |
+| **Seguridad** | [seguridad.md](docs/etapa-05/seguridad.md) | [`implementacion_seguridad.sql`](sql/tecnico/seguridad/implementacion_seguridad.sql) | [`demostracion_seguridad.sql`](sql/tecnico/seguridad/demostracion_seguridad.sql) |
+| **Índices y optimización** | [indices-optimizacion.md](docs/etapa-05/indices-optimizacion.md) | [`implentacion_indices.sql`](sql/tecnico/indices/implentacion_indices.sql) | [`demostracion_indices.sql`](sql/tecnico/indices/demostracion_indices.sql) |
+
+
+**Orden de ejecución:** en cada tema se ejecuta primero el script de implementación y después el de demostración.
+
+[⬆ Volver al índice](#tabla-de-contenidos)
+
+---
 
 ## Estructura del proyecto
 
